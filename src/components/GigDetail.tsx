@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Lock,
   FileCheck2,
+  XCircle,
 } from 'lucide-react';
 import { supabase, type Gig, type Application } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -31,7 +32,7 @@ const levelStyles: Record<string, string> = {
   Expert: 'bg-rose-50 text-rose-700 ring-rose-200',
 };
 
-type ApplyStage = 'idle' | 'uploading' | 'submitted';
+type ApplyStage = 'idle' | 'uploading' | 'submitted' | 'accepted' | 'declined';
 
 export default function GigDetail({
   gig,
@@ -41,7 +42,15 @@ export default function GigDetail({
   existingApplication,
 }: GigDetailProps) {
   const { user } = useAuth();
-  const [stage, setStage] = useState<ApplyStage>(existingApplication ? 'submitted' : 'idle');
+  const initialStage: ApplyStage =
+    existingApplication?.status === 'accepted'
+      ? 'accepted'
+      : existingApplication?.status === 'declined'
+        ? 'declined'
+        : existingApplication
+          ? 'submitted'
+          : 'idle';
+  const [stage, setStage] = useState<ApplyStage>(initialStage);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [coverNote, setCoverNote] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -236,7 +245,35 @@ export default function GigDetail({
             </section>
 
             {/* Apply section */}
-            {stage === 'submitted' ? (
+            {stage === 'accepted' ? (
+              <section
+                id="apply-section"
+                className="mt-6 rounded-xl border-2 border-emerald-300 bg-emerald-50 p-5 text-center shadow-sm shadow-emerald-100"
+              >
+                <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
+                <h3 className="mt-3 text-lg font-extrabold text-emerald-800">
+                  You've been accepted!
+                </h3>
+                <p className="mt-1 text-sm text-emerald-700">
+                  {gig.posted_by_name} accepted your application for this gig. Reach out to them to
+                  get started.
+                </p>
+              </section>
+            ) : stage === 'declined' ? (
+              <section
+                id="apply-section"
+                className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5 text-center"
+              >
+                <XCircle className="mx-auto h-10 w-10 text-slate-400" />
+                <h3 className="mt-3 text-lg font-extrabold text-slate-700">
+                  Application declined
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  {gig.posted_by_name} chose another student for this gig. Keep browsing — there
+                  are plenty more gigs on CampusConnect.
+                </p>
+              </section>
+            ) : stage === 'submitted' ? (
               <section
                 id="apply-section"
                 className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center"
@@ -247,7 +284,8 @@ export default function GigDetail({
                 </h3>
                 <p className="mt-1 text-sm text-emerald-700">
                   Your resume has been sent to {gig.posted_by_name}. This gig is now pinned to the
-                  top of your list so you can track it.
+                  top of your list so you can track it. You'll see an "Accepted" badge here the
+                  moment the poster picks you.
                 </p>
               </section>
             ) : (
@@ -359,12 +397,20 @@ export default function GigDetail({
             >
               <Heart className={`h-[18px] w-[18px] ${saved ? 'fill-current' : ''}`} />
             </button>
-            {stage === 'submitted' ? (
+            {stage === 'submitted' || stage === 'accepted' || stage === 'declined' ? (
               <button
                 onClick={onClose}
-                className="ml-auto flex h-11 items-center gap-2 rounded-full bg-emerald-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                className={`ml-auto flex h-11 items-center gap-2 rounded-full px-6 text-sm font-bold text-white shadow-sm transition ${
+                  stage === 'accepted'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-slate-800 hover:bg-slate-700'
+                }`}
               >
-                <CheckCircle2 className="h-4 w-4" />
+                {stage === 'accepted' ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
                 Done
               </button>
             ) : !user ? (

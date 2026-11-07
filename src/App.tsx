@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Briefcase, Sparkles, ShieldCheck, Pin } from 'lucide-react';
+import { Loader as Loader2, Briefcase, Sparkles, ShieldCheck, Pin, CircleCheck as CheckCircle2 } from 'lucide-react';
 import { supabase, type Gig, type Application } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
@@ -8,6 +8,7 @@ import GigCard from '@/components/GigCard';
 import GigDetail from '@/components/GigDetail';
 import AuthModal from '@/components/AuthModal';
 import PostGigModal from '@/components/PostGigModal';
+import MyGigsModal from '@/components/MyGigsModal';
 
 const FEATURED_TAGS = [
   'Coding',
@@ -36,6 +37,7 @@ export default function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [postGigOpen, setPostGigOpen] = useState(false);
+  const [myGigsOpen, setMyGigsOpen] = useState(false);
   // Remember what the user was trying to do before auth interrupted
   const [pendingAction, setPendingAction] = useState<null | 'apply' | 'post'>(null);
 
@@ -85,6 +87,16 @@ export default function App() {
 
   const appliedGigIds = useMemo(
     () => new Set(applications.map((a) => a.gig_id)),
+    [applications],
+  );
+
+  const acceptedGigIds = useMemo(
+    () => new Set(applications.filter((a) => a.status === 'accepted').map((a) => a.gig_id)),
+    [applications],
+  );
+
+  const declinedGigIds = useMemo(
+    () => new Set(applications.filter((a) => a.status === 'declined').map((a) => a.gig_id)),
     [applications],
   );
 
@@ -148,6 +160,15 @@ export default function App() {
     setAuthOpen(true);
   };
 
+  const handleRequestMyGigs = () => {
+    if (!user) {
+      setAuthMode('signin');
+      setAuthOpen(true);
+    } else {
+      setMyGigsOpen(true);
+    }
+  };
+
   const handleAuthed = () => {
     const action = pendingAction;
     setPendingAction(null);
@@ -181,6 +202,7 @@ export default function App() {
         onSearchChange={setSearchQuery}
         onPostGig={handleRequestPostGig}
         onSignIn={handleSignIn}
+        onMyGigs={handleRequestMyGigs}
       />
 
       {/* Hero */}
@@ -273,6 +295,8 @@ export default function App() {
                       onClick={() => setSelectedGig(gig)}
                       applied
                       pinned
+                      accepted={acceptedGigIds.has(gig.id)}
+                      declined={declinedGigIds.has(gig.id)}
                     />
                   ))}
                 </div>
@@ -342,6 +366,11 @@ export default function App() {
         open={postGigOpen}
         onClose={() => setPostGigOpen(false)}
         onPosted={handleGigPosted}
+      />
+
+      <MyGigsModal
+        open={myGigsOpen}
+        onClose={() => setMyGigsOpen(false)}
       />
     </div>
   );

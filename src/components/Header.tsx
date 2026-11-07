@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, GraduationCap, Plus, LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
+import { Search, GraduationCap, Plus, LogOut, User as UserIcon, ChevronDown, Briefcase } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 type HeaderProps = {
@@ -7,9 +7,10 @@ type HeaderProps = {
   onSearchChange: (value: string) => void;
   onPostGig: () => void;
   onSignIn: () => void;
+  onMyGigs: () => void;
 };
 
-export default function Header({ searchQuery, onSearchChange, onPostGig, onSignIn }: HeaderProps) {
+export default function Header({ searchQuery, onSearchChange, onPostGig, onSignIn, onMyGigs }: HeaderProps) {
   const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -87,6 +88,16 @@ export default function Header({ searchQuery, onSearchChange, onPostGig, onSignI
                 >
                   <Plus className="h-4 w-4 text-slate-400" />
                   Post a gig
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onMyGigs();
+                  }}
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  <Briefcase className="h-4 w-4 text-slate-400" />
+                  My posted gigs
                 </button>
                 <button
                   onClick={async () => {

@@ -1,4 +1,4 @@
-import { Clock, MapPin, FileText, ChevronRight, Pin, CheckCircle2 } from 'lucide-react';
+import { Clock, MapPin, FileText, ChevronRight, Pin, CircleCheck as CheckCircle2, Circle as XCircle } from 'lucide-react';
 import type { Gig } from '@/lib/supabase';
 
 type GigCardProps = {
@@ -6,6 +6,8 @@ type GigCardProps = {
   onClick: () => void;
   applied?: boolean;
   pinned?: boolean;
+  accepted?: boolean;
+  declined?: boolean;
 };
 
 const levelStyles: Record<string, string> = {
@@ -14,17 +16,27 @@ const levelStyles: Record<string, string> = {
   Expert: 'bg-rose-50 text-rose-700 ring-rose-200',
 };
 
-export default function GigCard({ gig, onClick, applied, pinned }: GigCardProps) {
+export default function GigCard({ gig, onClick, applied, pinned, accepted, declined }: GigCardProps) {
+  const accent = accepted
+    ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-200/70 hover:border-emerald-600 hover:shadow-emerald-300/70'
+    : pinned
+      ? 'border-emerald-300 bg-emerald-50/40 shadow-md shadow-emerald-100/60 hover:border-emerald-400 hover:shadow-emerald-200/60'
+      : declined
+        ? 'border-slate-200 bg-white opacity-75 hover:border-slate-300 hover:shadow-slate-100/50'
+        : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-emerald-100/50';
+
   return (
     <button
       onClick={onClick}
-      className={`group relative flex w-full flex-col gap-3 rounded-xl border p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${
-        pinned
-          ? 'border-emerald-300 bg-emerald-50/40 shadow-md shadow-emerald-100/60 hover:border-emerald-400 hover:shadow-emerald-200/60'
-          : 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-emerald-100/50'
-      }`}
+      className={`group relative flex w-full flex-col gap-3 rounded-xl border p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 ${accent}`}
     >
-      {pinned && (
+      {accepted && (
+        <div className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm ring-2 ring-white">
+          <CheckCircle2 className="h-3 w-3" />
+          Accepted
+        </div>
+      )}
+      {pinned && !accepted && (
         <div className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
           <Pin className="h-3 w-3 fill-current" />
           Applied
@@ -86,7 +98,17 @@ export default function GigCard({ gig, onClick, applied, pinned }: GigCardProps)
         </div>
         <div className="text-right">
           <p className="text-[15px] font-extrabold text-emerald-700">{gig.payment_display}</p>
-          {applied ? (
+          {accepted ? (
+            <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-600">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Accepted
+            </span>
+          ) : declined ? (
+            <span className="inline-flex items-center gap-0.5 text-xs font-bold text-slate-400">
+              <XCircle className="h-3.5 w-3.5" />
+              Declined
+            </span>
+          ) : applied ? (
             <span className="inline-flex items-center gap-0.5 text-xs font-bold text-emerald-600">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Applied
