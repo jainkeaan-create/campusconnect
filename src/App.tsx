@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader as Loader2, Briefcase, Sparkles, ShieldCheck, Pin, CircleCheck as CheckCircle2 } from 'lucide-react';
-import { supabase, type Gig, type Application } from '@/lib/supabase';
+import { supabase, fetchHirerBadgeMap, type Gig, type Application } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import TagFilter from '@/components/TagFilter';
@@ -27,6 +27,7 @@ export default function App() {
   const { user } = useAuth();
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [hirerBadges, setHirerBadges] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,7 +56,15 @@ export default function App() {
       if (queryError) {
         setError(queryError.message);
       } else {
-        setGigs((data ?? []) as Gig[]);
+        const gigList = (data ?? []) as Gig[];
+        setGigs(gigList);
+        const ownerIds = gigList
+          .map((g) => g.user_id)
+          .filter((id): id is string => Boolean(id));
+        const uniqueIds = Array.from(new Set(ownerIds));
+        if (uniqueIds.length > 0) {
+          fetchHirerBadgeMap(uniqueIds).then(setHirerBadges);
+        }
       }
       setLoading(false);
     })();
@@ -297,6 +306,7 @@ export default function App() {
                       pinned
                       accepted={acceptedGigIds.has(gig.id)}
                       declined={declinedGigIds.has(gig.id)}
+                      hirerReleaseCount={gig.user_id ? hirerBadges[gig.user_id] : undefined}
                     />
                   ))}
                 </div>
@@ -325,6 +335,7 @@ export default function App() {
                       gig={gig}
                       onClick={() => setSelectedGig(gig)}
                       applied={appliedGigIds.has(gig.id)}
+                      hirerReleaseCount={gig.user_id ? hirerBadges[gig.user_id] : undefined}
                     />
                   ))}
                 </div>
@@ -349,6 +360,7 @@ export default function App() {
           onRequestAuth={handleRequestAuth}
           onApplied={handleApplied}
           existingApplication={applicationForGig[selectedGig.id] ?? null}
+          hirerReleaseCount={selectedGig.user_id ? hirerBadges[selectedGig.user_id] : undefined}
         />
       )}
 

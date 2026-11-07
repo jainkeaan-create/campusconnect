@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { supabase, type Gig, type Application } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 type GigDetailProps = {
   gig: Gig;
@@ -24,6 +25,7 @@ type GigDetailProps = {
   onRequestAuth: () => void;
   onApplied: (gigId: string, application: Application) => void;
   existingApplication?: Application | null;
+  hirerReleaseCount?: number;
 };
 
 const levelStyles: Record<string, string> = {
@@ -40,6 +42,7 @@ export default function GigDetail({
   onRequestAuth,
   onApplied,
   existingApplication,
+  hirerReleaseCount,
 }: GigDetailProps) {
   const { user } = useAuth();
   const initialStage: ApplyStage =
@@ -238,7 +241,12 @@ export default function GigDetail({
                   {gig.posted_by_initial}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900">{gig.posted_by_name}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="font-bold text-slate-900">{gig.posted_by_name}</p>
+                    {hirerReleaseCount !== undefined && hirerReleaseCount > 0 && (
+                      <VerifiedBadge kind="hirer" count={hirerReleaseCount} size="md" />
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500">IIT Madras student</p>
                 </div>
               </div>
