@@ -135,12 +135,14 @@ export default function PaymentStep({ gig, onBack, onClose, onPosted }: PaymentS
     setStage('success');
   };
 
-  // Auto-redirect to homepage after success: hand the saved gig up and close.
+  // After success, let the user see the confirmation, then hand the saved
+  // gig up AND close everything (payment step + post-gig modal) together.
   useEffect(() => {
     if (stage !== 'success' || !savedGig) return;
-    onPosted(savedGig);
-    // Brief delay so the user sees the confirmation before the modal closes.
-    const t = setTimeout(() => onClose(), 3500);
+    const t = setTimeout(() => {
+      onPosted(savedGig);
+      onClose();
+    }, 3500);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, savedGig]);
@@ -213,12 +215,15 @@ export default function PaymentStep({ gig, onBack, onClose, onPosted }: PaymentS
 
             {stage === 'processing' && <ProcessingStage methodName={METHODS.find((m) => m.id === selectedMethod)?.label ?? 'payment'} />}
 
-            {stage === 'success' && (
+            {stage === 'success' && savedGig && (
               <SuccessStage
                 txnId={txnId}
                 total={total}
                 methodName={METHODS.find((m) => m.id === selectedMethod)?.label ?? 'Demo'}
-                onDone={onClose}
+                onDone={() => {
+                  onPosted(savedGig);
+                  onClose();
+                }}
               />
             )}
 
