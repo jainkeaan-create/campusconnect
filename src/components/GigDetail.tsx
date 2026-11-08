@@ -1,20 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  X,
-  Clock,
-  MapPin,
-  FileText,
-  BadgeDollarSign,
-  TrendingUp,
-  Send,
-  Heart,
-  Loader2,
-  UploadCloud,
-  CheckCircle2,
-  Lock,
-  FileCheck2,
-  XCircle,
-} from 'lucide-react';
+import { X, Clock, MapPin, FileText, BadgeDollarSign, TrendingUp, Send, Heart, Loader as Loader2, CloudUpload as UploadCloud, CircleCheck as CheckCircle2, Lock, FileCheck2, Circle as XCircle, CalendarClock } from 'lucide-react';
 import { supabase, type Gig, type Application } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import VerifiedBadge from '@/components/VerifiedBadge';
@@ -209,6 +194,16 @@ export default function GigDetail({
                 value={gig.experience_level}
               />
             </div>
+
+            {gig.deadline && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+                <CalendarClock className="h-4 w-4 text-amber-600" />
+                <span className="text-amber-800">
+                  <span className="font-bold">Deadline:</span>{' '}
+                  {new Date(gig.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            )}
 
             {/* Description */}
             <section className="mt-7">

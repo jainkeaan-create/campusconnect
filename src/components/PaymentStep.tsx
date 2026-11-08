@@ -13,6 +13,7 @@ export type PendingGig = {
   experienceLevel: string;
   duration: string;
   location: string;
+  deadline: string | null;
 };
 
 type PaymentStepProps = {
@@ -114,6 +115,7 @@ export default function PaymentStep({ gig, onBack, onClose, onPosted }: PaymentS
       location: gig.location,
       proposals_count: 0,
       status: 'open',
+      deadline: gig.deadline,
       user_id: user.id,
     };
 

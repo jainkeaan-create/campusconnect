@@ -44,6 +44,7 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
   const [experienceLevel, setExperienceLevel] = useState('Intermediate');
   const [duration, setDuration] = useState(DURATIONS[0]);
   const [location, setLocation] = useState(LOCATIONS[0]);
+  const [deadline, setDeadline] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pendingGig, setPendingGig] = useState<PendingGig | null>(null);
 
@@ -105,6 +106,7 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
       experienceLevel,
       duration,
       location,
+      deadline: deadline || null,
     });
   };
 
@@ -116,6 +118,7 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
     setDetails('');
     setPayment('');
     setSelectedTags([]);
+    setDeadline('');
     setPendingGig(null);
   };
 
@@ -236,6 +239,15 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
                     <option key={l} value={l}>{l}</option>
                   ))}
                 </select>
+              </FormRow>
+
+              <FormRow label="Deadline" hint="Optional">
+                <input
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm text-slate-800 transition focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
               </FormRow>
             </div>
 

@@ -24,6 +24,7 @@ export type Gig = {
   status: string;
   payment_status: 'pending' | 'released';
   completed_at: string | null;
+  deadline: string | null;
   user_id: string | null;
   created_at: string;
 };

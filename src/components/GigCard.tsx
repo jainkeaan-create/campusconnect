@@ -1,4 +1,4 @@
-import { Clock, MapPin, FileText, ChevronRight, Pin, CircleCheck as CheckCircle2, Circle as XCircle } from 'lucide-react';
+import { Clock, MapPin, FileText, ChevronRight, Pin, CircleCheck as CheckCircle2, Circle as XCircle, CalendarClock } from 'lucide-react';
 import type { Gig } from '@/lib/supabase';
 import VerifiedBadge from '@/components/VerifiedBadge';
 
@@ -84,6 +84,12 @@ export default function GigCard({ gig, onClick, applied, pinned, accepted, decli
           <FileText className="h-3.5 w-3.5 text-slate-400" />
           {gig.proposals_count} proposal{gig.proposals_count === 1 ? '' : 's'}
         </span>
+        {gig.deadline && (
+          <span className="inline-flex items-center gap-1">
+            <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
+            {new Date(gig.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+          </span>
+        )}
       </div>
 
       <div className="mt-1 flex items-center justify-between border-t border-slate-100 pt-3">
