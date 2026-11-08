@@ -1,5 +1,6 @@
 import { Clock, MapPin, FileText, ChevronRight, Pin, CircleCheck as CheckCircle2, Circle as XCircle } from 'lucide-react';
 import type { Gig } from '@/lib/supabase';
+import VerifiedBadge from '@/components/VerifiedBadge';
 
 type GigCardProps = {
   gig: Gig;
@@ -8,6 +9,7 @@ type GigCardProps = {
   pinned?: boolean;
   accepted?: boolean;
   declined?: boolean;
+  hirerReleaseCount?: number;
 };
 
 const levelStyles: Record<string, string> = {
@@ -16,7 +18,7 @@ const levelStyles: Record<string, string> = {
   Expert: 'bg-rose-50 text-rose-700 ring-rose-200',
 };
 
-export default function GigCard({ gig, onClick, applied, pinned, accepted, declined }: GigCardProps) {
+export default function GigCard({ gig, onClick, applied, pinned, accepted, declined, hirerReleaseCount }: GigCardProps) {
   const accent = accepted
     ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-200/70 hover:border-emerald-600 hover:shadow-emerald-300/70'
     : pinned
@@ -92,7 +94,12 @@ export default function GigCard({ gig, onClick, applied, pinned, accepted, decli
             {gig.posted_by_initial}
           </div>
           <div className="leading-tight">
-            <p className="text-xs font-semibold text-slate-700">{gig.posted_by_name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-slate-700">{gig.posted_by_name}</p>
+              {hirerReleaseCount !== undefined && hirerReleaseCount > 0 && (
+                <VerifiedBadge kind="hirer" count={hirerReleaseCount} />
+              )}
+            </div>
             <p className="text-[11px] text-slate-400">Posted a gig</p>
           </div>
         </div>

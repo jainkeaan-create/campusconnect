@@ -22,6 +22,8 @@ export type Gig = {
   location: string;
   proposals_count: number;
   status: string;
+  payment_status: 'pending' | 'released';
+  completed_at: string | null;
   user_id: string | null;
   created_at: string;
 };
@@ -35,6 +37,21 @@ export type Application = {
   cover_note: string | null;
   status: string;
   created_at: string;
+};
+
+export type EscrowRelease = {
+  id: string;
+  gig_id: string;
+  hirer_id: string;
+  seller_id: string;
+  amount: number;
+  txn_id: string;
+  released_at: string;
+};
+
+export type BadgeCounts = {
+  hirer: number;
+  seller: number;
 };
 
 /** Accepted IIT Madras student email domains. */
@@ -81,4 +98,55 @@ export function formatPayment(
   const formatted = new Intl.NumberFormat('en-IN').format(amount);
   if (type === 'hourly') return `₹${formatted}/hr`;
   return `₹${formatted} fixed price`;
+}
+
+export function generateDemoTxnId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = 'DEMO-ESCROW-';
+  for (let i = 0; i < 10; i++) {
+    id += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return id;
+}
+
+/**
+ * Fetch the verified-hirer and verified-seller released-payment counts
+ * for a single user. Returns {0,0} if the user has no releases.
+ */
+export async function fetchBadgeCounts(userId: string): Promise<BadgeCounts> {
+  const [hirerRes, sellerRes] = await Promise.all([
+    supabase
+      .from('hirer_release_counts')
+      .select('released_count')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('seller_release_counts')
+      .select('released_count')
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ]);
+  return {
+    hirer: (hirerRes.data as { released_count?: number } | null)?.released_count ?? 0,
+    seller: (sellerRes.data as { released_count?: number } | null)?.released_count ?? 0,
+  };
+}
+
+/**
+ * Fetch a map of user_id -> released hirer count for a set of users.
+ * Useful for batch-loading badges to show on gig cards.
+ */
+export async function fetchHirerBadgeMap(
+  userIds: string[],
+): Promise<Record<string, number>> {
+  if (userIds.length === 0) return {};
+  const { data } = await supabase
+    .from('hirer_release_counts')
+    .select('user_id, released_count')
+    .in('user_id', userIds);
+  const map: Record<string, number> = {};
+  for (const row of (data ?? []) as { user_id: string; released_count: number }[]) {
+    map[row.user_id] = row.released_count;
+  }
+  return map;
 }

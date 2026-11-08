@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { X, Loader2, Plus, Tag } from 'lucide-react';
-import { supabase, colorForName, initialForName, formatPayment, type Gig } from '@/lib/supabase';
+import { X, Plus, Tag, ArrowRight } from 'lucide-react';
+import { type Gig } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import PaymentStep, { type PendingGig } from '@/components/PaymentStep';
 
 type PostGigModalProps = {
   open: boolean;
@@ -44,7 +45,7 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
   const [duration, setDuration] = useState(DURATIONS[0]);
   const [location, setLocation] = useState(LOCATIONS[0]);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [pendingGig, setPendingGig] = useState<PendingGig | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -61,8 +62,6 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
 
   if (!open) return null;
 
-  const fullName = (user?.user_metadata?.full_name as string) || 'Student';
-
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
@@ -77,7 +76,7 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
     setCustomTag('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -95,50 +94,40 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
       return;
     }
 
-    setBusy(true);
-    const newGig = {
+    // Move to the demo payment step instead of inserting directly.
+    setPendingGig({
       title: title.trim(),
       description: description.trim(),
       details: details.trim() || description.trim(),
       payment: amount,
-      payment_type: paymentType,
-      payment_display: formatPayment(amount, paymentType),
+      paymentType,
       tags: selectedTags,
-      posted_by_name: fullName,
-      posted_by_initial: initialForName(fullName),
-      posted_by_color: colorForName(fullName),
-      experience_level: experienceLevel,
+      experienceLevel,
       duration,
       location,
-      proposals_count: 0,
-      status: 'open',
-      user_id: user.id,
-    };
+    });
+  };
 
-    const { data, error: insertError } = await supabase
-      .from('gigs')
-      .insert(newGig)
-      .select()
-      .single();
-
-    setBusy(false);
-    if (insertError) {
-      setError(insertError.message);
-      return;
-    }
-    onPosted(data as Gig);
-    onClose();
-    // reset
+  const handlePosted = (gig: Gig) => {
+    onPosted(gig);
+    // reset form for next time
     setTitle('');
     setDescription('');
     setDetails('');
     setPayment('');
     setSelectedTags([]);
+    setPendingGig(null);
+  };
+
+  const handleClose = () => {
+    // Abandon any in-progress payment attempt and close.
+    setPendingGig(null);
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 z-[60] overflow-y-auto">
-      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={handleClose} />
       <div className="flex min-h-full items-start justify-center p-0 sm:p-4 sm:py-8">
         <div className="relative w-full max-w-2xl animate-[slideUp_0.25s_ease-out] rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
           <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-100 bg-white/95 px-5 py-3.5 backdrop-blur sm:px-7">
@@ -147,7 +136,7 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
               <p className="text-xs text-slate-500">Reach IIT Madras students who can get it done.</p>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               aria-label="Close"
             >
@@ -311,23 +300,32 @@ export default function PostGigModal({ open, onClose, onPosted }: PostGigModalPr
             <div className="sticky bottom-0 -mx-5 flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-5 py-3.5 sm:-mx-7 sm:px-7">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="h-11 rounded-xl px-5 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={busy}
-                className="flex h-11 items-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                className="flex h-11 items-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                Post gig
+                <Plus className="h-4 w-4" />
+                Continue to payment
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {pendingGig && (
+        <PaymentStep
+          gig={pendingGig}
+          onBack={() => setPendingGig(null)}
+          onClose={handleClose}
+          onPosted={handlePosted}
+        />
+      )}
     </div>
   );
 }
